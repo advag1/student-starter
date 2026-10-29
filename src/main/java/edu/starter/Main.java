@@ -13,7 +13,7 @@ public final class Main {
         System.out.println("=== Welcome to the Battle Game! ===");
         game.GameStatus();
 
-        while (!game.IsGamwOver())
+        while (!game.IsGamwOver()) {
             System.out.println("\nChoose your action:");
             System.out.println("1. Attack");
             System.out.println("2. Special (Costs 3 resources, deals 15 damage)");
@@ -49,7 +49,8 @@ public final class Main {
             }
         }
         
-        System.out.println("Game over. Thanks for playing!");
+        game.ShowGameOver();
+        System.out.println("Thanks for playing!");
         scanner.close();
     }
 }

@@ -43,7 +43,7 @@ public class Player{
     //
 
     public void PlayerStatus(){
-        System.out.println("HP left: " + this.HP + "resource left: " + this.resource);
+        System.out.println("HP left: " + this.HP + ", resource left: " + this.resource);
     }
 
 }
