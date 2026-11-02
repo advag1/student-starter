@@ -2,21 +2,30 @@ package edu.starter;
 
 public class Game{
     private Player player;
-    private Player enemy;
+    private Enemy enemy;
+    private Enemy enemy2;
+    private Enemy currEnemy;
 
     public Game(){
         this.player = new Player();
-        this.enemy = new Player();
+        this.enemy = new Enemy(30);
+        this.enemy2 = new Enemy(30);
+        this.currEnemy = enemy;
     }
 
-    public Game(int HP, int resource, int HP2, int resource2){
+    public Game(int HP, int resource, int HP2, int resource2, int HP3, int resource3){
         this.player = new Player(HP, resource);
         this.enemy = new Player(HP2, resource2);
+        this.enemy2 = new Enemy(HP3, resource3);
+        this.currEnemy = enemy;
     }
 
     public void BasicAttack(int damage){
-        enemy.SetHP(enemy.GetHP() - damage);
+        enemy.SetHP(currEnemy.GetHP() - damage);
         this.BackAttack(10);
+        if (currEnemy.IsHPIllegal()){
+            currEnemy = enemy2;
+        }
         this.IsGamwOver();
         System.out.println("player attack enemy");
         this.GameStatus();
@@ -59,6 +68,16 @@ public class Game{
     }
 
     public boolean IsGamwOver(){
+        if (player.IsHPIllegal()){
+            return true;
+        }
+        if (enemy.IsHPIllegal()){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean IsCurrGameOver(){
         if (player.IsHPIllegal()){
             return true;
         }

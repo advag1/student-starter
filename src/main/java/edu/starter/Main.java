@@ -2,9 +2,14 @@ package edu.starter;
 
 import java.util.Scanner;
 
-/** Student-owned game entry point; replace this message with your own implementation. */
 public final class Main {
     public static void main(String[] args){
+        Main myObject = new Main();
+        myObject.game();
+        myObject.game();
+    }
+
+    public static void game(){
         System.out.println("Java project ready. Build your Week 1 adventure here.");
         
         Scanner scanner = new Scanner(System.in);
@@ -24,7 +29,7 @@ public final class Main {
             
             if (!scanner.hasNextInt()) {
                 System.out.println("Invalid input! Please enter a number between 1 and 4.");
-                scanner.next();
+                scanner.next(); // ניקוי הקלט הלא תקין
                 continue;
             }
 
@@ -51,6 +56,6 @@ public final class Main {
         
         game.ShowGameOver();
         System.out.println("Thanks for playing!");
-        scanner.close();
+        // הסרנו את scanner.close() כדי למנוע קריסה של זרם הקלט
     }
 }
