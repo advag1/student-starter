@@ -1,70 +1,148 @@
-# Java & OOP Adventure — Student Starter
+# Java & OOP Adventure — Week 02: Two Encounters, One Evolving Player
 
-**Start with your own design.** The files here deliberately do not contain a game engine, combatant hierarchy, future rules, or an instructor solution.
+A console-based Java adventure featuring two consecutive 1v1 encounters with independent enemy state and persistent player HP and resources.
+
+## Environment & Build Instructions
 
 Prerequisites: JDK 25, Maven, Git, terminal/IDE.
 
-```
+```bash
+# Verify environment
 java -version
+
+# Run JUnit tests
 mvn test
+
+# Run application using Maven
 mvn exec:java -Dexec.mainClass=edu.starter.Main
-
 ```
 
-If the Maven exec plugin is unavailable, compile the starter directly:
+Alternatively, compile and run directly using `javac` and `java`:
 
-```
+```bash
 mkdir -p build
 javac -d build src/main/java/edu/starter/*.java
 java -cp build edu.starter.Main
-
 ```
 
-Choose one theme: Fantasy Dungeon, Space Skirmish, Robot Arena or Creature Tournament.
-Read the workshop PDF for the current week and maintain one evolving Git repository all semester.
-
-Utilities: `ConsoleChoice.read()` for safe numeric input, `Checks.that()` and `Checks.within()` for early tests. There are no hidden future requirements in this kit.
+---
 
 ## Architecture & Design Note
 
-The architecture separates responsibilities cleanly between input handling, game orchestration, and participant state:
+The application separates responsibilities using object-oriented principles:
 
-* **`Player`**: Encapsulates participant state (`HP`, `resource`) and enforces invariants such as clamping HP bounds and validating legal resource limits.
+* **`Combatant` (Base Class)**: Represents any entity in battle (`Player` and `Enemy`). Encapsulates core state including current `HP` and entity `name`. Provides methods to inspect health status (`GetHP`, `IsHPIllegal`) and safely apply state updates.
+* **`Player` and `Enemy` (Subclasses)**: Inherit core combat state from `Combatant`. `Player` introduces resource management (`resource`), enforcing upper limits (capped at 10) and cost validation. `Enemy` maintains independent entity identity and custom initialization.
+* **`Game`**: Acts as the battle coordinator. It manages encounter sequence, turn flow, and rules execution (such as counterattacks, special attacks, recovery, and defense).
+* **`Main`**: Manages user console interaction and options menu parsing.
 
-* **`Game`**: Manages the battle flow, coordinates turns, executes specific actions (Attack, Special, Recover, Defend), and tracks victory/loss state.
+**Design Questions Answered**:
+1. *State Ownership*: `Combatant` owns internal health and identity. The battle coordinator (`Game`) controls turn sequencing, action routing, and combat triggers.
+2. *Player Persistence*: The exact same `Player` instance is passed through consecutive encounters because state is maintained inside the object instance rather than reset upon starting a new battle.
+3. *Exclusions from Combatant*: Console input reading (`Scanner`) was intentionally excluded from `Combatant` to maintain separation of concerns and keep entity domain logic independent of UI presentation.
 
-* **`Main`**: Acts as the user interaction layer, parsing console input using `Scanner` and maintaining the primary game loop.
-
-**Design Decision**: Separating state validation (`IsGamwOver`) from side effects (printing status) prevents recursive state corruption and avoids duplicate output during turn execution.
-
-## Python vs. Java Comparison (R05)
-
-1. **Typing**: Java enforces static typing at compile time (e.g., `int HP`), preventing type-mismatch errors before execution. Python uses dynamic typing, resolving variable types at runtime.
-
-2. **Compilation & Execution**: Java code compiles into platform-independent Bytecode (`.class`) executed by the Java Virtual Machine (JVM). Python is an interpreted language executing source code directly via the Python interpreter.
-
-3. **Entry Point**: Java requires a formal class-bound entry point (`public static void main(String[] args)`), whereas Python scripts execute sequentially from top to bottom.
+---
 
 ## Responsible AI Use Note
 
-* **Question Asked**: "How can I prevent duplicate game over messages during turn execution?"
+* **AI Design Exercise Proposal**: The AI suggested using an abstract coordinator class to handle encounter state transitions alongside entity classes.
+* **Useful Suggestion**: Using method delegation in `Player` for resource recovery logic while retaining base status reporting in `Combatant`.
+* **Rejected / Simplified Suggestion**: An AI proposal to create an abstract `Encounter` interface was simplified into a straightforward `Game` coordinator to keep the solution clean and focused.
+* **Verification Test**: Verified state persistence across encounters using JUnit assertions and trace logs showing player HP/resource carrying over into Encounter 2.
 
-* **Useful Suggestion**: Separating `IsGamwOver()` state validation from console printing (`System.out.println`) so the loop controls display logic.
+---
 
-* **Verified / Rejected Suggestion**:
+## Terminal Test Transcripts & Evidence (T1 – T7)
 
-  * *Verified*: Adding input validation (`scanner.hasNextInt()`) prior to consuming integers to avoid unhandled exceptions on invalid input (`W01-INV-01`).
+Below is the verified console trace demonstrating full compliance with Week 02 requirements and acceptance tests T1 through T7.
 
-  * *Rejected*: An AI suggestion to create an abstract `Unit` class hierarchy was rejected to keep the current Week 01 implementation minimal, explainable, and compliant with project constraints.
+```text
+=== Welcome to the Battle Adventure! ===
 
-## Terminal Test Transcripts
+--- Encounter 1 vs Enemy 1 (30 HP) ---
+--- Current Status ---
+Player: HP = 100 | Resources = 5
+Enemy: HP = 30
+----------------------
 
-### Test 1: Basic Attack Flow
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 2
+enemy attack player
+player special attack enemy
+--- Current Status ---
+Player: HP = 90 | Resources = 2
+Enemy: HP = 15
+----------------------
 
-```
-=== Welcome to the Battle Game! ===
-HP left: 100, resource left: 5
-HP left: 100, resource left: 5
+# [T5/W01-INV-01] Special attempted at 2 resource -> Rejected; no enemy counterattack
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 2
+There are not enough resources :(
+
+# [T1/W02-OBJ-01 & T6/W01-END] Defeating Enemy 1 (30 HP) with Attack -> No counterattack on knockout
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 1
+enemy attack player
+player attack enemy
+--- Current Status ---
+Player: HP = 80 | Resources = 2
+Enemy: HP = 5
+----------------------
+
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 1
+Enemy 1 defeated! Enemy 2 appears!
+player attack enemy
+--- Current Status ---
+Player: HP = 80 | Resources = 2
+Enemy: HP = 45
+----------------------
+
+# [T2/W02-ENC-01 & T3/W02-ENC-02 & T4/W02-ENC-03]
+# Encounter 2 starts: Player retains 80 HP & 2 resources; Enemy 2 starts fresh at 45 HP with defense cleared.
+--- Encounter 2 vs Enemy 2 (45 HP) ---
+
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 3
+player recover
+enemy attack player
+--- Current Status ---
+Player: HP = 70 | Resources = 5
+Enemy: HP = 45
+----------------------
+
+Choose your action:
+1. Attack
+2. Special (Costs 3 resources, deals 15 damage)
+3. Recover (Restores 3 resources)
+4. Defend (Take half damage)
+Enter your choice (1-4): 2
+enemy attack player
+player special attack enemy
+--- Current Status ---
+Player: HP = 60 | Resources = 2
+Enemy: HP = 30
+----------------------
 
 Choose your action:
 1. Attack
@@ -73,77 +151,37 @@ Choose your action:
 4. Defend (Take half damage)
 Enter your choice (1-4): 1
 enemy attack player
-HP left: 90, resource left: 5
-HP left: 90, resource left: 5
 player attack enemy
-HP left: 90, resource left: 5
-HP left: 90, resource left: 5
+--- Current Status ---
+Player: HP = 50 | Resources = 2
+Enemy: HP = 20
+----------------------
 
-```
-
-### Test 2: Special Attack Execution & Resource Deduction
-
-```
 Choose your action:
 1. Attack
 2. Special (Costs 3 resources, deals 15 damage)
 3. Recover (Restores 3 resources)
 4. Defend (Take half damage)
-Enter your choice (1-4): 2
+Enter your choice (1-4): 1
 enemy attack player
-HP left: 80, resource left: 2
-HP left: 85, resource left: 5
 player attack enemy
-HP left: 80, resource left: 2
-HP left: 85, resource left: 5
+--- Current Status ---
+Player: HP = 40 | Resources = 2
+Enemy: HP = 10
+----------------------
 
-```
-
-### Test 3: Resource Recovery & Boundary Clamping
-
-```
 Choose your action:
 1. Attack
 2. Special (Costs 3 resources, deals 15 damage)
 3. Recover (Restores 3 resources)
 4. Defend (Take half damage)
-Enter your choice (1-4): 3
-enemy attack player
-HP left: 70, resource left: 5
-HP left: 85, resource left: 5
+Enter your choice (1-4): 1
+player attack enemy
+--- Current Status ---
+Player: HP = 40 | Resources = 2
+Enemy: HP = 0
+----------------------
 
-```
-
-### Test 4: Defensive Stance (Half Damage)
-
-```
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 4
-HP left: 65, resource left: 5
-HP left: 85, resource left: 5
-
-```
-
-### Test 5: Invalid Input Handling & Game Over State
-
-```
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): abc
-Invalid input! Please enter a number between 1 and 4.
-
-Enter your choice (1-4): 9
-Invalid choice! Choose between 1 and 4.
-
-...
 game over, you won!!
 Thanks for playing!
-
 ```
