@@ -1,6 +1,6 @@
 package edu.starter;
 
-public class Combatant {
+public abstract class Combatant {
     protected int HP;
     protected String name;
 

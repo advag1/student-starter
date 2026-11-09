@@ -7,42 +7,50 @@ public final class Main {
         System.out.println("=== Welcome to the Battle Adventure! ===");
         
         Scanner scanner = new Scanner(System.in);
-        
         Game game = new Game();
 
+        // --- Encounter 1 ---
         System.out.println("\n--- Encounter 1 vs Enemy 1 (30 HP) ---");
+        game.GameStatus();
+
+        while (!game.IsGameOver() && !game.isFirstEncounterWon()) {
+            printMenu();
+            
+            int choice = ConsoleChoice.read(scanner, 1, 4);
+            if (choice == -1) {
+                System.out.println("Invalid input! Please enter a number between 1 and 4.");
+                continue;
+            }
+
+            executeAction(game, choice);
+        }
+
+        if (game.IsGameOver()) {
+            game.ShowGameOver();
+            System.out.println("Thanks for playing!");
+            return;
+        }
+
+        if (game.isFirstEncounterWon()) {
+            game.Reward(scanner);
+        }
+
+        // --- Encounter 2 ---
+        System.out.println("\n--- Encounter 2 vs Enemy 2 (45 HP) ---");
         game.GameStatus();
 
         while (!game.IsGameOver()) {
             printMenu();
             
-            if (!scanner.hasNextInt()) {
+            int choice = ConsoleChoice.read(scanner, 1, 4);
+            if (choice == -1) {
                 System.out.println("Invalid input! Please enter a number between 1 and 4.");
-                scanner.next();
                 continue;
             }
 
-            int choice = scanner.nextInt();
-
-            switch (choice) {
-                case 1:
-                    game.Attack(10);
-                    break;
-                case 2:
-                    game.Special();
-                    break;
-                case 3:
-                    game.Recover();
-                    break;
-                case 4:
-                    game.Defend();
-                    break;
-                default:
-                    System.out.println("Invalid choice! Choose between 1 and 4.");
-                    break;
-            }
+            executeAction(game, choice);
         }
-        
+
         game.ShowGameOver();
         System.out.println("Thanks for playing!");
     }
@@ -51,72 +59,28 @@ public final class Main {
         System.out.println("\nChoose your action:");
         System.out.println("1. Attack");
         System.out.println("2. Special (Costs 3 resources, deals 15 damage)");
-        System.out.println("3. Recover (Restores 3 resources)");
-        System.out.println("4. Defend (Take half damage)");
+        System.out.println("3. Recover (Restores resources)");
+        System.out.println("4. Defend (Take damage)");
         System.out.print("Enter your choice (1-4): ");
     }
-}
 
-
-
-/* 
-import java.util.Scanner;
-
-public final class Main {
-    public static void main(String[] args){
-        Main myObject = new Main();
-        myObject.game();
-        myObject.game();
-    }
-
-    public static void game(){
-        System.out.println("Java project ready. Build your Week 1 adventure here.");
-        
-        Scanner scanner = new Scanner(System.in);
-        Game game = new Game();
-
-        System.out.println("=== Welcome to the Battle Game! ===");
-        game.GameStatus();
-
-        while (!game.IsGamwOver()) {
-            System.out.println("\nChoose your action:");
-            System.out.println("1. Attack");
-            System.out.println("2. Special (Costs 3 resources, deals 15 damage)");
-            System.out.println("3. Recover (Restores 3 resources)");
-            System.out.println("4. Defend (Take half damage)");
-            
-            System.out.print("Enter your choice (1-4): ");
-            
-            if (!scanner.hasNextInt()) {
-                System.out.println("Invalid input! Please enter a number between 1 and 4.");
-                scanner.next(); // ניקוי הקלט הלא תקין
-                continue;
-            }
-
-            int choice = scanner.nextInt();
-
-            switch (choice) {
-                case 1:
-                    game.Attack(10);
-                    break;
-                case 2:
-                    game.Special();
-                    break;
-                case 3:
-                    game.Recover();
-                    break;
-                case 4:
-                    game.Defend();
-                    break;
-                default:
-                    System.out.println("Invalid choice! Choose between 1 and 4.");
-                    break;
-            }
+    private static void executeAction(Game game, int choice) {
+        switch (choice) {
+            case 1:
+                game.Attack();
+                break;
+            case 2:
+                game.Special();
+                break;
+            case 3:
+                game.Recover();
+                break;
+            case 4:
+                game.Defend();
+                break;
+            default:
+                System.out.println("Invalid choice!");
+                break;
         }
-        
-        game.ShowGameOver();
-        System.out.println("Thanks for playing!");
-        // הסרנו את scanner.close() כדי למנוע קריסה של זרם הקלט
     }
 }
-*/

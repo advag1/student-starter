@@ -2,14 +2,16 @@ package edu.starter;
 
 public class Player extends Combatant {
     protected int resource;
+    protected int attackDamage = 10;
+    protected boolean rewardClaimed = false;
 
     public Player() {
-        super("Player");
+        super("player");
         this.resource = 5;
     }
 
     public Player(int HP, int resource) {
-        super(HP, "Player");
+        super(HP, "player");
         this.resource = resource;
     }
 
@@ -26,6 +28,30 @@ public class Player extends Combatant {
         this.resource = newResource;
     }
 
+    public int GetAttackDamage() {
+        return this.attackDamage;
+    }
+
+    public boolean IsRewardClaimed() {
+        return this.rewardClaimed;
+    }
+
+    public void ReceiveRecovery() {
+        if (this.rewardClaimed) {
+            return;
+        }
+        this.HP = Math.min(100, this.HP + 25);
+        this.rewardClaimed = true;
+    }
+
+    public void ReceivePower() {
+        if (this.rewardClaimed) {
+            return;
+        }
+        this.attackDamage += 2;
+        this.rewardClaimed = true;
+    }
+
     public void Recover() {
         this.resource += 3;
         if (this.resource > 10) {
@@ -35,6 +61,6 @@ public class Player extends Combatant {
 
     public void PlayerStatus() {
         super.CombatantStatus();
-        System.out.println("Player resource left: " + this.resource);
+        System.out.println("Player resource left: " + this.resource + " | Attack: " + this.attackDamage);
     }
 }
