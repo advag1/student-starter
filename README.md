@@ -1,187 +1,65 @@
-# Java & OOP Adventure — Week 02: Two Encounters, One Evolving Player
+# Java & OOP Adventure — Week 03: Contracts, Invariants & Rewards
 
-A console-based Java adventure featuring two consecutive 1v1 encounters with independent enemy state and persistent player HP and resources.
+**Theme:** fantasy battle. RECOVERY = healing, POWER = stronger basic attack.
 
-## Environment & Build Instructions
-
-Prerequisites: JDK 25, Maven, Git, terminal/IDE.
-
-```bash
-# Verify environment
-java -version
-
-# Run JUnit tests
-mvn test
-
-# Run application using Maven
-mvn exec:java -Dexec.mainClass=edu.starter.Main
-```
-
-Alternatively, compile and run directly using `javac` and `java`:
+## Environment & Run Instructions
+JDK 25.
 
 ```bash
 mkdir -p build
 javac -d build src/main/java/edu/starter/*.java
 java -cp build edu.starter.Main
+# run with scripted input (used for the traces below):
+java -cp build edu.starter.Main < inputs/power.txt
 ```
+Tests (requires the project's `pom.xml` with JUnit 5): `mvn test`
 
----
+## Design Principles
+- **Contracts:** preconditions are the client's responsibility (Golden Rule).
+  `Main` checks `Game.canClaimReward()` before calling `reward()`.
+  Supplier methods such as `receiveRecovery` do not re-check their own preconditions.
+- **Invariants:** `setHP` clamps HP to `0..100`, `setResource` clamps resource to `0..10`.
+  Attack damage never decreases.
+- **Enum:** rewards are represented by `Reward { RECOVERY, POWER }` and applied by `Player.applyReward`.
+- **Input robustness:** `ConsoleChoice` returns -1 for invalid input; EOF ends the program cleanly.
 
-## Architecture & Design Note
+## Design Note
+State ownership: Combatant/Player own HP, resource, attack damage and the rewardClaimed flag.
+Their setters clamp values, so 0 <= HP <= 100 and 0 <= resource <= 10 hold after every call.
+Game owns encounter sequencing and the reward gate.
 
-The application separates responsibilities using object-oriented principles:
+Preconditions: a reward is allowed only when canClaimReward() is true: Enemy 1 is defeated,
+the player is alive, and no reward was claimed yet. Following the lecture's Golden Rule,
+receiveRecovery/receivePower do not re-check this; the client (Main) does. Calling them
+otherwise is a client bug, so T5/T6 are verified by showing canClaimReward() is false
+before the victory and after a reward was chosen.
 
-* **`Combatant` (Base Class)**: Represents any entity in battle (`Player` and `Enemy`). Encapsulates core state including current `HP` and entity `name`. Provides methods to inspect health status (`GetHP`, `IsHPIllegal`) and safely apply state updates.
-* **`Player` and `Enemy` (Subclasses)**: Inherit core combat state from `Combatant`. `Player` introduces resource management (`resource`), enforcing upper limits (capped at 10) and cost validation. `Enemy` maintains independent entity identity and custom initialization.
-* **`Game`**: Acts as the battle coordinator. It manages encounter sequence, turn flow, and rules execution (such as counterattacks, special attacks, recovery, and defense).
-* **`Main`**: Manages user console interaction and options menu parsing.
+Postconditions: Recovery: HP = min(100, old HP + 25), resource and attack unchanged.
+Power: attack = old attack + 2, HP and resource unchanged. Special stays 15 because it is a
+separate fixed value in Game, not derived from attack damage.
 
-**Design Questions Answered**:
-1. *State Ownership*: `Combatant` owns internal health and identity. The battle coordinator (`Game`) controls turn sequencing, action routing, and combat triggers.
-2. *Player Persistence*: The exact same `Player` instance is passed through consecutive encounters because state is maintained inside the object instance rather than reset upon starting a new battle.
-3. *Exclusions from Combatant*: Console input reading (`Scanner`) was intentionally excluded from `Combatant` to maintain separation of concerns and keep entity domain logic independent of UI presentation.
+Invalid reward input: reward() prints an error and asks again; no state changes.
+Uniqueness: the rewardClaimed flag. The same Player object continues into Encounter 2
+against a fresh 45-HP enemy. On a loss, Main stops immediately and no reward is offered.
 
----
+## Acceptance Tests
+| ID | Test (JUnit method) | Expected | Result |
+|----|---------------------|----------|--------|
+| T1 | `t1_recoveryFrom90` | HP 100 | PASS |
+| T2 | `t2_recoveryAt100` | HP 100, reward consumed | PASS |
+| T3 | `t3_powerGives12` | Attack 12, HP/resource same | PASS |
+| T4 | trace "invalid reward" | error, then Power once | see trace |
+| T5 | `t5_noRewardBeforeVictory` | canClaimReward false | PASS |
+| T6 | `t6_noSecondReward` | canClaimReward false after reward | PASS |
+| T7 | `t7_lossNoReward` | no reward after loss | PASS |
+| T8 | trace Power/Recovery | HP 80 / res 2 persist | see traces |
+| T9 | `t9_finishingAttackNoCounter` | won, HP unchanged | PASS |
 
-## Responsible AI Use Note
+## Traces
+Generated by running the real `Main` with the files in `inputs/`.
+(paste the real output here: power.txt, recovery.txt, invalid_reward.txt, loss.txt)
 
-* **AI Design Exercise Proposal**: The AI suggested using an abstract coordinator class to handle encounter state transitions alongside entity classes.
-* **Useful Suggestion**: Using method delegation in `Player` for resource recovery logic while retaining base status reporting in `Combatant`.
-* **Rejected / Simplified Suggestion**: An AI proposal to create an abstract `Encounter` interface was simplified into a straightforward `Game` coordinator to keep the solution clean and focused.
-* **Verification Test**: Verified state persistence across encounters using JUnit assertions and trace logs showing player HP/resource carrying over into Encounter 2.
-
----
-
-## Terminal Test Transcripts & Evidence (T1 – T7)
-
-Below is the verified console trace demonstrating full compliance with Week 02 requirements and acceptance tests T1 through T7.
-
-```text
-=== Welcome to the Battle Adventure! ===
-
---- Encounter 1 vs Enemy 1 (30 HP) ---
---- Current Status ---
-Player: HP = 100 | Resources = 5
-Enemy: HP = 30
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 2
-enemy attack player
-player special attack enemy
---- Current Status ---
-Player: HP = 90 | Resources = 2
-Enemy: HP = 15
-----------------------
-
-# [T5/W01-INV-01] Special attempted at 2 resource -> Rejected; no enemy counterattack
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 2
-There are not enough resources :(
-
-# [T1/W02-OBJ-01 & T6/W01-END] Defeating Enemy 1 (30 HP) with Attack -> No counterattack on knockout
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 1
-enemy attack player
-player attack enemy
---- Current Status ---
-Player: HP = 80 | Resources = 2
-Enemy: HP = 5
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 1
-Enemy 1 defeated! Enemy 2 appears!
-player attack enemy
---- Current Status ---
-Player: HP = 80 | Resources = 2
-Enemy: HP = 45
-----------------------
-
-# [T2/W02-ENC-01 & T3/W02-ENC-02 & T4/W02-ENC-03]
-# Encounter 2 starts: Player retains 80 HP & 2 resources; Enemy 2 starts fresh at 45 HP with defense cleared.
---- Encounter 2 vs Enemy 2 (45 HP) ---
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 3
-player recover
-enemy attack player
---- Current Status ---
-Player: HP = 70 | Resources = 5
-Enemy: HP = 45
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 2
-enemy attack player
-player special attack enemy
---- Current Status ---
-Player: HP = 60 | Resources = 2
-Enemy: HP = 30
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 1
-enemy attack player
-player attack enemy
---- Current Status ---
-Player: HP = 50 | Resources = 2
-Enemy: HP = 20
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 1
-enemy attack player
-player attack enemy
---- Current Status ---
-Player: HP = 40 | Resources = 2
-Enemy: HP = 10
-----------------------
-
-Choose your action:
-1. Attack
-2. Special (Costs 3 resources, deals 15 damage)
-3. Recover (Restores 3 resources)
-4. Defend (Take half damage)
-Enter your choice (1-4): 1
-player attack enemy
---- Current Status ---
-Player: HP = 40 | Resources = 2
-Enemy: HP = 0
-----------------------
-
-game over, you won!!
-Thanks for playing!
-```
+## Responsible AI Use
+- **Useful suggestion:** [write yours]
+- **Rejected suggestion:** [write yours]
+- **Test I verified independently:** [write yours]

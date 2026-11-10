@@ -3,6 +3,7 @@ package edu.starter;
 public abstract class Combatant {
     protected int HP;
     protected String name;
+    public static final int MAX_HP = 100;
 
     public Combatant() {
         this.HP = 100;
@@ -29,19 +30,23 @@ public abstract class Combatant {
         this.name = name;
     }
 
-    public int GetHP() {
+    public int getHP() {
         return this.HP;
     }
 
-    public void SetHP(int newHP) {
+    /**
+     * @pre 0 <= newHP && newHP <= MAX_HP
+     * @post getHP() == newHP
+     */
+    public void setHP(int newHP) {
         this.HP = newHP;
     }
 
-    public boolean IsHPIllegal() {
+    public boolean isHpIllegal() {
         return this.HP <= 0;
     }
 
-    public void CombatantStatus() {
+    public void combatantStatus() {
         System.out.println("Name: " + this.name + " | HP left: " + this.HP);
     }
 }

@@ -11,13 +11,14 @@ public final class Main {
 
         // --- Encounter 1 ---
         System.out.println("\n--- Encounter 1 vs Enemy 1 (30 HP) ---");
-        game.GameStatus();
+        game.gameStatus();
 
-        while (!game.IsGameOver() && !game.isFirstEncounterWon()) {
+        while (!game.isGameOver() && !game.isFirstEncounterWon()) {
             printMenu();
             
             int choice = ConsoleChoice.read(scanner, 1, 4);
             if (choice == -1) {
+                if (!scanner.hasNextLine()) break; // הגנה מ-EOF
                 System.out.println("Invalid input! Please enter a number between 1 and 4.");
                 continue;
             }
@@ -25,25 +26,26 @@ public final class Main {
             executeAction(game, choice);
         }
 
-        if (game.IsGameOver()) {
-            game.ShowGameOver();
+        if (game.isGameOver()) {
+            game.showGameOver();
             System.out.println("Thanks for playing!");
             return;
         }
 
         if (game.isFirstEncounterWon()) {
-            game.Reward(scanner);
+            game.reward(scanner);
         }
 
         // --- Encounter 2 ---
         System.out.println("\n--- Encounter 2 vs Enemy 2 (45 HP) ---");
-        game.GameStatus();
+        game.gameStatus();
 
-        while (!game.IsGameOver()) {
+        while (!game.isGameOver()) {
             printMenu();
             
             int choice = ConsoleChoice.read(scanner, 1, 4);
             if (choice == -1) {
+                if (!scanner.hasNextLine()) break; // הגנה מ-EOF
                 System.out.println("Invalid input! Please enter a number between 1 and 4.");
                 continue;
             }
@@ -51,7 +53,7 @@ public final class Main {
             executeAction(game, choice);
         }
 
-        game.ShowGameOver();
+        game.showGameOver();
         System.out.println("Thanks for playing!");
     }
 
@@ -67,16 +69,16 @@ public final class Main {
     private static void executeAction(Game game, int choice) {
         switch (choice) {
             case 1:
-                game.Attack();
+                game.attack();
                 break;
             case 2:
-                game.Special();
+                game.special();
                 break;
             case 3:
-                game.Recover();
+                game.recover();
                 break;
             case 4:
-                game.Defend();
+                game.defend();
                 break;
             default:
                 System.out.println("Invalid choice!");
